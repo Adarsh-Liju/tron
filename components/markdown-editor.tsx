@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
+import { Textarea } from './ui/textarea'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs'
+import { ScrollArea } from './ui/scroll-area'
 
 interface MarkdownEditorProps {
   value: string
@@ -34,49 +37,42 @@ export function MarkdownEditor({
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
-      <div className="flex gap-2 mb-2 border-b border-tron-cyan/30 pb-2">
-        <button
-          onClick={() => setIsPreview(false)}
-          className={cn(
-            'px-3 py-1 text-xs font-mono uppercase tracking-wider transition-all',
-            !isPreview
-              ? 'text-tron-cyan border-b-2 border-tron-cyan'
-              : 'text-tron-cyan/50 hover:text-tron-cyan'
-          )}
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => setIsPreview(true)}
-          className={cn(
-            'px-3 py-1 text-xs font-mono uppercase tracking-wider transition-all',
-            isPreview
-              ? 'text-tron-cyan border-b-2 border-tron-cyan'
-              : 'text-tron-cyan/50 hover:text-tron-cyan'
-          )}
-        >
-          Preview
-        </button>
-      </div>
+      <Tabs value={isPreview ? 'preview' : 'edit'} onValueChange={(val) => setIsPreview(val === 'preview')} className="flex flex-col h-full">
+        <TabsList className="bg-black/50 border border-tron-cyan/30 mb-2">
+          <TabsTrigger 
+            value="edit" 
+            className="data-[state=active]:bg-tron-cyan/20 data-[state=active]:text-tron-cyan text-tron-cyan/50 font-mono uppercase tracking-wider"
+          >
+            Edit
+          </TabsTrigger>
+          <TabsTrigger 
+            value="preview"
+            className="data-[state=active]:bg-tron-cyan/20 data-[state=active]:text-tron-cyan text-tron-cyan/50 font-mono uppercase tracking-wider"
+          >
+            Preview
+          </TabsTrigger>
+        </TabsList>
 
-      {!isPreview ? (
-        <textarea
-          value={localValue}
-          onChange={(e) => handleChange(e.target.value)}
-          placeholder={placeholder}
-          className={cn(
-            'w-full h-full bg-black/50 border-2 border-tron-cyan/30 text-tron-cyan font-mono text-sm p-4',
-            'focus:border-tron-cyan focus:shadow-[0_0_15px_rgba(0,234,255,0.4)] focus:outline-none',
-            'resize-none leading-relaxed'
-          )}
-          style={{ minHeight: '200px' }}
-        />
-      ) : (
-        <div className="flex-1 overflow-y-auto p-4 bg-black/30 border-2 border-tron-cyan/30 rounded">
-          <div className="prose prose-invert prose-sm max-w-none text-tron-cyan/90 font-mono">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
+        <TabsContent value="edit" className="flex-1 min-h-0 mt-0">
+          <Textarea
+            value={localValue}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder={placeholder}
+            className={cn(
+              'w-full h-full bg-black/50 border-2 border-tron-cyan/30 text-tron-cyan font-mono text-sm p-4',
+              'focus:border-tron-cyan focus:shadow-[0_0_15px_rgba(0,234,255,0.4)]',
+              'resize-none leading-relaxed'
+            )}
+            style={{ minHeight: '200px' }}
+          />
+        </TabsContent>
+
+        <TabsContent value="preview" className="flex-1 min-h-0 mt-0">
+          <ScrollArea className="h-full p-4 bg-black/30 border-2 border-tron-cyan/30 rounded">
+            <div className="prose prose-invert prose-sm max-w-none text-tron-cyan/90 font-mono">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
                 h1: ({ children }) => (
                   <h1 className="text-2xl font-bold text-tron-cyan-light mb-4 mt-6 [text-shadow:0_0_10px_#00eaff]">
                     {children}
@@ -131,11 +127,12 @@ export function MarkdownEditor({
                 em: ({ children }) => <em className="italic">{children}</em>,
               }}
             >
-              {localValue || '*No content*'}
-            </ReactMarkdown>
-          </div>
-        </div>
-      )}
+                {localValue || '*No content*'}
+              </ReactMarkdown>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

@@ -13,11 +13,13 @@ import {
   addNote as dbAddNote,
   updateNote as dbUpdateNote,
   deleteNote as dbDeleteNote,
-  reorderNotes as dbReorderNotes,
   updateNoteSize as dbUpdateNoteSize,
+  updateNotePosition as dbUpdateNotePosition,
+  autoArrangeNotes as dbAutoArrangeNotes,
   type Note,
 } from '@/lib/notes-db'
 import { useKeybindings } from '@/hooks/use-keybindings'
+import { useToast } from '@/hooks/use-toast'
 
 export function KeepApp() {
   const [notes, setNotes] = useState<Note[]>([])
@@ -25,17 +27,28 @@ export function KeepApp() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [inputModal, setInputModal] = useState<{ open: boolean; title: string; defaultValue: string; markdown?: boolean; onConfirm: (value: string) => void } | null>(null)
   const [confirmModal, setConfirmModal] = useState<{ open: boolean; message: string; title: string; onConfirm: () => void } | null>(null)
+  const { toast } = useToast()
 
-  const loadNotes = useCallback(() => {
-    const loadedNotes = getAllNotes()
-    setNotes(loadedNotes)
-    if (loadedNotes.length > 0 && focusedNote >= loadedNotes.length) {
-      setFocusedNote(Math.max(0, loadedNotes.length - 1))
+  const loadNotes = useCallback(async () => {
+    try {
+      const loadedNotes = await getAllNotes()
+      setNotes(loadedNotes)
+      if (loadedNotes.length > 0 && focusedNote >= loadedNotes.length) {
+        setFocusedNote(Math.max(0, loadedNotes.length - 1))
+      }
+    } catch (error) {
+      console.error('Failed to load notes:', error)
     }
   }, [focusedNote])
 
   useEffect(() => {
-    initDatabase().then(() => {
+    initDatabase().then(async () => {
+      const loadedNotes = await getAllNotes()
+      // Auto-arrange notes that don't have positions
+      const needsArrangement = loadedNotes.some(note => note.x === null || note.y === null)
+      if (needsArrangement && loadedNotes.length > 0) {
+        await dbAutoArrangeNotes()
+      }
       loadNotes()
     }).catch((error) => {
       console.error('Failed to initialize database:', error)
@@ -74,12 +87,21 @@ export function KeepApp() {
   const handleAddNote = async () => {
     const text = await showInputModal('New note:', '', true)
     if (!text) return
-    dbAddNote(text)
-    loadNotes()
-    const updatedNotes = getAllNotes()
+    const newNote = await dbAddNote(text)
+    if (newNote) {
+      // Auto-arrange all notes including the new one
+      await dbAutoArrangeNotes()
+    }
+    await loadNotes()
+    const updatedNotes = await getAllNotes()
     if (updatedNotes.length) {
       setFocusedNote(updatedNotes.length - 1)
     }
+    toast({
+      title: "Note Created",
+      description: "Your note has been added successfully.",
+      className: "bg-tron-cyan/10 border-tron-cyan text-tron-cyan",
+    })
   }
 
   const handleEditFocused = async () => {
@@ -87,8 +109,13 @@ export function KeepApp() {
       const note = notes[focusedNote]
       const updated = await showInputModal('Edit note:', note.text, true)
       if (updated !== null && updated !== '') {
-        dbUpdateNote(note.id, updated)
-        loadNotes()
+        await dbUpdateNote(note.id, updated)
+        await loadNotes()
+        toast({
+          title: "Note Updated",
+          description: "Your note has been saved.",
+          className: "bg-tron-cyan/10 border-tron-cyan text-tron-cyan",
+        })
       }
     }
   }
@@ -98,9 +125,14 @@ export function KeepApp() {
       const confirmed = await showConfirmModal('Delete this note?', 'Delete Note')
       if (confirmed) {
         const note = notes[focusedNote]
-        dbDeleteNote(note.id)
-        loadNotes()
+        await dbDeleteNote(note.id)
+        await loadNotes()
         setFocusedNote(Math.max(-1, focusedNote - 1))
+        toast({
+          title: "Note Deleted",
+          description: "The note has been removed.",
+          className: "bg-[#ff0066]/10 border-[#ff0066] text-[#ff0066]",
+        })
       }
     }
   }
@@ -147,10 +179,21 @@ export function KeepApp() {
     },
   })
 
+  const handleAutoArrange = async () => {
+    await dbAutoArrangeNotes()
+    await loadNotes()
+    toast({
+      title: "Notes Auto-Arranged",
+      description: "All notes have been automatically arranged.",
+      className: "bg-tron-cyan/10 border-tron-cyan text-tron-cyan",
+    })
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <TopBar onAddNote={handleAddNote} />
-      <KeepGrid
+      <TopBar onAddNote={handleAddNote} onAutoArrange={handleAutoArrange} />
+      <div className="flex-1 overflow-hidden">
+        <KeepGrid
         notes={notes}
         focusedNote={focusedNote}
         onNoteFocus={setFocusedNote}
@@ -159,28 +202,39 @@ export function KeepApp() {
           const note = notes[noteIndex]
           const updated = await showInputModal('Edit note', note.text, true)
           if (updated !== null && updated !== '') {
-            dbUpdateNote(note.id, updated)
-            loadNotes()
+            await dbUpdateNote(note.id, updated)
+            await loadNotes()
+            toast({
+              title: "Note Updated",
+              description: "Your note has been saved.",
+              className: "bg-tron-cyan/10 border-tron-cyan text-tron-cyan",
+            })
           }
         }}
         onDeleteNote={async (noteIndex) => {
           const confirmed = await showConfirmModal('Delete this note?', 'Delete Note')
           if (confirmed) {
             const note = notes[noteIndex]
-            dbDeleteNote(note.id)
-            loadNotes()
+            await dbDeleteNote(note.id)
+            await loadNotes()
             setFocusedNote(Math.max(-1, focusedNote - 1))
+            toast({
+              title: "Note Deleted",
+              description: "The note has been removed.",
+              className: "bg-[#ff0066]/10 border-[#ff0066] text-[#ff0066]",
+            })
           }
         }}
-        onResizeNote={(noteId, width, height) => {
-          dbUpdateNoteSize(noteId, width, height)
-          loadNotes()
+        onResizeNote={async (noteId, width, height) => {
+          await dbUpdateNoteSize(noteId, width, height)
+          await loadNotes()
         }}
-        onReorderNotes={(noteIds) => {
-          dbReorderNotes(noteIds)
-          loadNotes()
+        onUpdateNotePosition={async (noteId, x, y) => {
+          await dbUpdateNotePosition(noteId, x, y)
+          await loadNotes()
         }}
       />
+      </div>
       <StatusBar
         boards={[]}
         focusedBoard={0}
@@ -215,6 +269,9 @@ export function KeepApp() {
           onCancel={() => setConfirmModal(null)}
         />
       )}
+      <footer className="text-xs text-tron-cyan/30 text-center py-2 bg-[rgba(0,19,24,0.8)] border-t-2 border-tron-cyan/30">
+        Made with ❤️ by Adarsh Liju Abraham
+      </footer>
     </div>
   )
 }

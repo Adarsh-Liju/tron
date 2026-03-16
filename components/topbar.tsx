@@ -5,9 +5,10 @@ import { Button } from './ui/button'
 interface TopBarProps {
   onAddBoard?: () => void
   onAddNote: () => void
+  onAutoArrange?: () => void
 }
 
-export function TopBar({ onAddBoard, onAddNote }: TopBarProps) {
+export function TopBar({ onAddBoard, onAddNote, onAutoArrange }: TopBarProps) {
   return (
     <header className="flex justify-between items-center px-6 py-4 border-b-2 border-tron-cyan/60 bg-[rgba(0,19,24,0.8)] backdrop-blur-sm relative z-[100] shadow-[0_2px_20px_rgba(0,234,255,0.2)]">
       <div className="flex items-center gap-6">
@@ -16,6 +17,15 @@ export function TopBar({ onAddBoard, onAddNote }: TopBarProps) {
         </span>
       </div>
       <div className="flex gap-3">
+        {onAutoArrange && (
+          <Button
+            variant="outline"
+            onClick={onAutoArrange}
+            className="border-2 border-tron-cyan/50 text-tron-cyan/70 uppercase tracking-wider text-xs px-4 py-2 hover:bg-tron-cyan/10 hover:shadow-[0_0_15px_rgba(0,234,255,0.4)] transition-all"
+          >
+            AUTO ARRANGE
+          </Button>
+        )}
         <Button
           variant="outline"
           onClick={onAddNote}

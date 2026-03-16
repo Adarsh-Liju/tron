@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { Input } from './ui/input'
+import { ScrollArea } from './ui/scroll-area'
 import { cn } from '@/lib/utils'
 
 interface Command {
@@ -75,7 +76,7 @@ export function CommandPalette({ open, onClose, commands }: CommandPaletteProps)
           className="bg-black/50 border-2 border-tron-cyan/30 text-tron-cyan font-mono focus:border-tron-cyan focus:shadow-[0_0_15px_rgba(0,234,255,0.4)]"
           autoFocus
         />
-        <div className="max-h-[300px] overflow-y-auto">
+        <ScrollArea className="max-h-[300px]">
           {filteredCommands.map((cmd, idx) => (
             <div
               key={cmd.name}
@@ -95,7 +96,7 @@ export function CommandPalette({ open, onClose, commands }: CommandPaletteProps)
               </kbd>
             </div>
           ))}
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   )

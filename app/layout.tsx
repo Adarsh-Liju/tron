@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Orbitron, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -27,6 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${orbitron.variable} ${jetbrainsMono.variable}`}>
         {children}
+        <Toaster />
       </body>
     </html>
   );
