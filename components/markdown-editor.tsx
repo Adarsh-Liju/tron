@@ -73,10 +73,9 @@ export function MarkdownEditor({
         />
       ) : (
         <div className="flex-1 overflow-y-auto p-4 bg-black/30 border-2 border-tron-cyan/30 rounded">
-          <div className="prose prose-invert prose-sm max-w-none">
+          <div className="prose prose-invert prose-sm max-w-none text-tron-cyan/90 font-mono">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              className="text-tron-cyan/90 font-mono"
               components={{
                 h1: ({ children }) => (
                   <h1 className="text-2xl font-bold text-tron-cyan-light mb-4 mt-6 [text-shadow:0_0_10px_#00eaff]">

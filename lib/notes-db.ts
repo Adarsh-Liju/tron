@@ -120,7 +120,7 @@ function migrateFromOldDb() {
       `, [boardId])
       
       if (notes.length) {
-        notes[0].values.forEach((row, index) => {
+        notes[0].values.forEach((row: any[], index: number) => {
           db!.run(
             `INSERT OR REPLACE INTO notes (id, text, position) VALUES (?, ?, ?)`,
             [row[0], row[1], index]
@@ -166,7 +166,7 @@ export function getAllNotes(): Note[] {
   
   if (!notes.length) return []
   
-  return notes[0].values.map(row => ({
+  return notes[0].values.map((row: any[]) => ({
     id: row[0] as string,
     text: row[1] as string,
     position: row[2] as number || 0,

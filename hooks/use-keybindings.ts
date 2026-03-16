@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 
 interface Keybindings {
-  [key: string]: (e?: KeyboardEvent) => void
+  [key: string]: (e: KeyboardEvent) => void
 }
 
 export function useKeybindings(keybindings: Keybindings) {
