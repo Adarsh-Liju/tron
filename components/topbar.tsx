@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from './ui/button'
+import { playClick, playTronBeep } from '@/lib/sounds'
 
 interface TopBarProps {
   onAddBoard?: () => void
@@ -20,7 +21,10 @@ export function TopBar({ onAddBoard, onAddNote, onAutoArrange }: TopBarProps) {
         {onAutoArrange && (
           <Button
             variant="outline"
-            onClick={onAutoArrange}
+            onClick={() => {
+              playClick()
+              onAutoArrange()
+            }}
             className="border-2 border-tron-cyan/50 text-tron-cyan/70 uppercase tracking-wider text-xs px-4 py-2 hover:bg-tron-cyan/10 hover:shadow-[0_0_15px_rgba(0,234,255,0.4)] transition-all"
           >
             AUTO ARRANGE
@@ -28,7 +32,10 @@ export function TopBar({ onAddBoard, onAddNote, onAutoArrange }: TopBarProps) {
         )}
         <Button
           variant="outline"
-          onClick={onAddNote}
+          onClick={() => {
+            playClick()
+            onAddNote()
+          }}
           className="border-2 border-tron-cyan text-tron-cyan uppercase tracking-wider text-xs px-4 py-2 hover:bg-tron-cyan/10 hover:shadow-[0_0_15px_rgba(0,234,255,0.4)] transition-all"
         >
           + NOTE

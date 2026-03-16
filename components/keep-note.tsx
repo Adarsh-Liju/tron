@@ -7,6 +7,7 @@ import { type Note } from '@/lib/notes-db'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from './ui/card'
 import { ScrollArea } from './ui/scroll-area'
+import { playClick, playTronBeep } from '@/lib/sounds'
 
 interface KeepNoteProps {
   note: Note
@@ -125,13 +126,18 @@ export function KeepNote({
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onClick={() => onFocus(noteIndex)}
+      onClick={() => {
+        playClick()
+        onFocus(noteIndex)
+      }}
       onDoubleClick={() => {
+        playTronBeep()
         onFocus(noteIndex)
         onEdit(noteIndex)
       }}
       onContextMenu={(e) => {
         e.preventDefault()
+        playClick()
         onFocus(noteIndex)
         onDelete(noteIndex)
       }}

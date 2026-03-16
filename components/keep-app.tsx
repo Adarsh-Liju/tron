@@ -20,6 +20,7 @@ import {
 } from '@/lib/notes-db'
 import { useKeybindings } from '@/hooks/use-keybindings'
 import { useToast } from '@/hooks/use-toast'
+import { playTronBeep, playClick, playLaserZap, playError } from '@/lib/sounds'
 
 export function KeepApp() {
   const [notes, setNotes] = useState<Note[]>([])
@@ -85,8 +86,13 @@ export function KeepApp() {
   }
 
   const handleAddNote = async () => {
+    playClick()
     const text = await showInputModal('New note:', '', true)
-    if (!text) return
+    if (!text) {
+      playError()
+      return
+    }
+    playLaserZap()
     const newNote = await dbAddNote(text)
     if (newNote) {
       // Auto-arrange all notes including the new one
@@ -106,9 +112,11 @@ export function KeepApp() {
 
   const handleEditFocused = async () => {
     if (focusedNote >= 0 && notes[focusedNote]) {
+      playClick()
       const note = notes[focusedNote]
       const updated = await showInputModal('Edit note:', note.text, true)
       if (updated !== null && updated !== '') {
+        playTronBeep()
         await dbUpdateNote(note.id, updated)
         await loadNotes()
         toast({
@@ -122,8 +130,10 @@ export function KeepApp() {
 
   const handleDeleteFocused = async () => {
     if (focusedNote >= 0 && notes[focusedNote]) {
+      playClick()
       const confirmed = await showConfirmModal('Delete this note?', 'Delete Note')
       if (confirmed) {
+        playError()
         const note = notes[focusedNote]
         await dbDeleteNote(note.id)
         await loadNotes()
@@ -197,6 +207,7 @@ export function KeepApp() {
         notes={notes}
         focusedNote={focusedNote}
         onNoteFocus={setFocusedNote}
+        onAddNote={handleAddNote}
         onEditNote={async (noteIndex) => {
           setFocusedNote(noteIndex)
           const note = notes[noteIndex]

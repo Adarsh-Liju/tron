@@ -78,6 +78,7 @@ const config: Config = {
         pulse: "pulse 2s ease-in-out infinite",
         fadein: "fadein 0.4s ease",
         jiggle: "jiggle 0.5s ease-in-out infinite",
+        "grid-pulse": "gridpulse 0.6s ease-out",
       },
       keyframes: {
         gridmove: {
@@ -114,6 +115,24 @@ const config: Config = {
           "70%": { transform: "translate(3px, 1px) rotate(-1deg)" },
           "80%": { transform: "translate(-1px, -1px) rotate(1deg)" },
           "90%": { transform: "translate(1px, 2px) rotate(0deg)" },
+        },
+        gridpulse: {
+          "0%": {
+            opacity: "0",
+            transform: "scale(0.95)",
+          },
+          "30%": {
+            opacity: "0.8",
+            transform: "scale(1.02)",
+          },
+          "60%": {
+            opacity: "0.4",
+            transform: "scale(1.01)",
+          },
+          "100%": {
+            opacity: "0",
+            transform: "scale(1)",
+          },
         },
       },
     },
