@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 180 100% 50%;
+    --card: 180 100% 3%;
+    --card-foreground: 180 100% 50%;
+    --popover: 180 100% 3%;
+    --popover-foreground: 180 100% 50%;
+    --primary: 180 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 180 50% 20%;
+    --secondary-foreground: 180 100% 50%;
+    --muted: 180 30% 10%;
+    --muted-foreground: 180 50% 60%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 180 100% 50%;
+    --border: 180 100% 30%;
+    --input: 180 100% 30%;
+    --ring: 180 100% 50%;
+    --radius: 0.5rem;
+    --chart-1: 180 100% 50%;
+    --chart-2: 180 80% 40%;
+    --chart-3: 180 60% 30%;
+    --chart-4: 180 40% 20%;
+    --chart-5: 180 20% 10%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-mono;
+    background: radial-gradient(circle at center, #02040a, #000000);
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  body::before {
+    content: "";
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-image:
+      linear-gradient(rgba(0, 234, 255, 0.13) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 234, 255, 0.13) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: grid-move 20s linear infinite;
+    z-index: 0;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  
+  body::after {
+    content: "";
+    position: fixed;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      #00eaff,
+      transparent
+    );
+    animation: scanline 3s linear infinite;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
