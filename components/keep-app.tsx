@@ -16,7 +16,9 @@ import {
   updateNoteSize as dbUpdateNoteSize,
   updateNotePosition as dbUpdateNotePosition,
   autoArrangeNotes as dbAutoArrangeNotes,
+  importNotes as dbImportNotes,
   type Note,
+  type ExportData,
 } from '@/lib/notes-db'
 import { useKeybindings } from '@/hooks/use-keybindings'
 import { useToast } from '@/hooks/use-toast'
@@ -172,6 +174,7 @@ export function KeepApp() {
     'Enter': handleEditFocused,
     'd': handleDeleteFocused,
     'x': handleDeleteFocused,
+    'Delete': handleDeleteFocused,
     'g': () => notes.length > 0 && setFocusedNote(0),
     'G': () => notes.length > 0 && setFocusedNote(notes.length - 1),
     'Escape': () => {
@@ -199,9 +202,75 @@ export function KeepApp() {
     })
   }
 
+  const handleExport = async () => {
+    try {
+      const allNotes = await getAllNotes()
+      const exportData: ExportData = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        notes: allNotes,
+      }
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json',
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `tron-notes-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      playClick()
+      toast({
+        title: "Notes Exported",
+        description: `${allNotes.length} note(s) exported successfully.`,
+        className: "bg-tron-cyan/10 border-tron-cyan text-tron-cyan",
+      })
+    } catch (error) {
+      playError()
+      toast({
+        title: "Export Failed",
+        description: "Could not export notes.",
+        className: "bg-[#ff0066]/10 border-[#ff0066] text-[#ff0066]",
+      })
+    }
+  }
+
+  const handleImport = async (file: File) => {
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      const notesToImport = Array.isArray(data) ? data : data.notes ?? []
+      if (notesToImport.length === 0) {
+        playError()
+        toast({
+          title: "Import Failed",
+          description: "No valid notes found in file.",
+          className: "bg-[#ff0066]/10 border-[#ff0066] text-[#ff0066]",
+        })
+        return
+      }
+      const added = await dbImportNotes(notesToImport)
+      await dbAutoArrangeNotes()
+      await loadNotes()
+      playLaserZap()
+      toast({
+        title: "Notes Imported",
+        description: `${added} note(s) imported successfully.`,
+        className: "bg-tron-cyan/10 border-tron-cyan text-tron-cyan",
+      })
+    } catch (error) {
+      playError()
+      toast({
+        title: "Import Failed",
+        description: "Invalid file format or could not read file.",
+        className: "bg-[#ff0066]/10 border-[#ff0066] text-[#ff0066]",
+      })
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <TopBar onAddNote={handleAddNote} onAutoArrange={handleAutoArrange} />
+      <TopBar onAddNote={handleAddNote} onAutoArrange={handleAutoArrange} onExport={handleExport} onImport={handleImport} />
       <div className="flex-1 overflow-hidden">
         <KeepGrid
         notes={notes}

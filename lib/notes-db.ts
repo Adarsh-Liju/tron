@@ -337,6 +337,59 @@ export async function autoArrangeNotes(): Promise<boolean> {
   })
 }
 
+export const EXPORT_VERSION = 1
+
+export interface ExportData {
+  version: number
+  exportedAt: string
+  notes: Note[]
+}
+
+export async function importNotes(notesToImport: Partial<Note>[]): Promise<number> {
+  if (!db) {
+    await initDatabase()
+  }
+
+  const allNotes = await getAllNotes()
+  const maxPosition = allNotes.length > 0
+    ? Math.max(...allNotes.map((n) => n.position)) + 1
+    : 0
+  const now = new Date().toISOString()
+
+  const validNotes: Note[] = notesToImport
+    .filter((n) => n.text != null && typeof n.text === 'string')
+    .map((n, i) => ({
+      id: nanoid(),
+      text: n.text!,
+      position: maxPosition + i,
+      x: typeof n.x === 'number' ? n.x : null,
+      y: typeof n.y === 'number' ? n.y : null,
+      width: n.width ?? 300,
+      height: n.height ?? 150,
+      created_at: n.created_at ?? now,
+      updated_at: now,
+    }))
+
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error('Database not initialized'))
+      return
+    }
+
+    const transaction = db.transaction([STORE_NAME], 'readwrite')
+    const objectStore = transaction.objectStore(STORE_NAME)
+
+    let added = 0
+    transaction.oncomplete = () => resolve(added)
+    transaction.onerror = () => reject(new Error('Failed to import notes'))
+
+    for (const note of validNotes) {
+      const request = objectStore.put(note)
+      request.onsuccess = () => added++
+    }
+  })
+}
+
 // Initialize database on module load
 if (typeof window !== 'undefined') {
   initDatabase().then(() => {
